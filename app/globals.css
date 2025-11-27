@@ -43,185 +43,106 @@
   --radius-xl: calc(var(--radius) + 4px);
 }
 
-/* CHAOTIC ADVENTURE THEME - Vibrant & Wild! */
+/* BOLD WHITE & PURPLE THEME */
 :root {
-  --radius: 1.25rem;
-  
-  /* Adventure Color Palette */
-  --adventure-orange: 25 100% 60%;      /* Sunset/Energy - #FF6B35 */
-  --adventure-teal: 168 100% 39%;       /* Ocean/Exploration - #00C9A7 */
-  --adventure-purple: 264 62% 65%;      /* Magic/Chaos - #845EC2 */
-  --adventure-yellow: 42 100% 69%;      /* Treasure/Discovery - #FFC75F */
-  --adventure-navy: 240 26% 15%;        /* Deep Night - #1A1A2E */
-  --adventure-sky: 200 100% 85%;        /* Sky/Freedom - #B8E6FF */
-  
-  /* Light Theme - Vibrant & Energetic */
-  --background: var(--adventure-sky);
-  --foreground: var(--adventure-navy);
+  --radius: 1rem;
+
+  /* Bold Palette */
+  --bold-purple: 270 100% 60%;
+  /* Electric Purple */
+  --bold-violet: 260 100% 45%;
+  /* Deep Violet */
+  --bold-white: 0 0% 100%;
+  --bold-black: 260 50% 10%;
+  /* Very dark purple-black */
+
+  --background: 0 0% 100%;
+  /* Pure White */
+  --foreground: 260 50% 10%;
+  /* Dark Purple/Black Text */
+
   --card: 0 0% 100%;
-  --card-foreground: var(--adventure-navy);
+  --card-foreground: 260 50% 10%;
+
   --popover: 0 0% 100%;
-  --popover-foreground: var(--adventure-navy);
-  --primary: var(--adventure-orange);
+  --popover-foreground: 260 50% 10%;
+
+  --primary: 270 100% 60%;
+  /* Electric Purple */
   --primary-foreground: 0 0% 100%;
-  --secondary: var(--adventure-teal);
-  --secondary-foreground: 0 0% 100%;
-  --muted: 42 50% 95%;
-  --muted-foreground: 240 10% 40%;
-  --accent: var(--adventure-purple);
-  --accent-foreground: 0 0% 100%;
+
+  --secondary: 260 20% 96%;
+  /* Very light purple tint */
+  --secondary-foreground: 260 50% 10%;
+
+  --muted: 260 10% 94%;
+  --muted-foreground: 260 20% 40%;
+
+  --accent: 270 100% 96%;
+  /* Light purple accent */
+  --accent-foreground: 260 50% 10%;
+
   --destructive: 0 84% 60%;
-  --border: var(--adventure-orange);
-  --input: var(--adventure-teal);
-  --ring: var(--adventure-purple);
-  --chart-1: var(--adventure-orange);
-  --chart-2: var(--adventure-teal);
-  --chart-3: var(--adventure-purple);
-  --chart-4: var(--adventure-yellow);
-  --chart-5: 340 82% 52%;
+  --destructive-foreground: 0 0% 100%;
+
+  --border: 260 20% 90%;
+  --input: 260 20% 90%;
+  --ring: 270 100% 60%;
+
+  --chart-1: 270 100% 60%;
+  --chart-2: 290 100% 60%;
+  --chart-3: 310 100% 60%;
+  --chart-4: 330 100% 60%;
+  --chart-5: 350 100% 60%;
 }
 
 .dark {
-  /* Dark Theme - Deep & Mysterious */
-  --background: var(--adventure-navy);
-  --foreground: 0 0% 98%;
-  --card: 240 20% 20%;
-  --card-foreground: 0 0% 98%;
-  --popover: 240 20% 18%;
-  --popover-foreground: 0 0% 98%;
-  --primary: var(--adventure-orange);
+  /* Forcing Light Theme look even in dark mode as requested */
+  --background: 0 0% 100%;
+  --foreground: 260 50% 10%;
+  --card: 0 0% 100%;
+  --card-foreground: 260 50% 10%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 260 50% 10%;
+  --primary: 270 100% 60%;
   --primary-foreground: 0 0% 100%;
-  --secondary: var(--adventure-teal);
-  --secondary-foreground: 0 0% 100%;
-  --muted: 240 15% 25%;
-  --muted-foreground: 0 0% 70%;
-  --accent: var(--adventure-purple);
-  --accent-foreground: 0 0% 100%;
+  --secondary: 260 20% 96%;
+  --secondary-foreground: 260 50% 10%;
+  --muted: 260 10% 94%;
+  --muted-foreground: 260 20% 40%;
+  --accent: 270 100% 96%;
+  --accent-foreground: 260 50% 10%;
   --destructive: 0 84% 60%;
-  --border: var(--adventure-orange);
-  --input: var(--adventure-teal);
-  --ring: var(--adventure-purple);
-  --chart-1: var(--adventure-orange);
-  --chart-2: var(--adventure-teal);
-  --chart-3: var(--adventure-purple);
-  --chart-4: var(--adventure-yellow);
-  --chart-5: 340 82% 52%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 260 20% 90%;
+  --input: 260 20% 90%;
+  --ring: 270 100% 60%;
 }
 
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
-  
+
   body {
     @apply bg-background text-foreground;
-    background: linear-gradient(135deg, 
-      hsl(var(--background)) 0%, 
-      hsl(var(--adventure-teal) / 0.2) 50%,
-      hsl(var(--adventure-purple) / 0.2) 100%
-    );
-    background-attachment: fixed;
+    background-color: white;
+    background-image: none;
+    /* Remove previous gradient */
+    min-height: 100vh;
   }
 }
 
-/* CHAOTIC ANIMATIONS */
-@keyframes float {
-  0%, 100% { transform: translateY(0px) rotate(0deg); }
-  50% { transform: translateY(-20px) rotate(2deg); }
+/* Custom Gradients */
+.gradient-card {
+  background: linear-gradient(135deg, #ffffff 0%, #f3e8ff 100%);
+  /* White to Light Purple */
+  border: 1px solid #e9d5ff;
 }
 
-@keyframes bounce-chaotic {
-  0%, 100% { transform: translateY(0) scale(1); }
-  25% { transform: translateY(-10px) scale(1.05) rotate(-2deg); }
-  75% { transform: translateY(-5px) scale(0.95) rotate(2deg); }
-}
-
-@keyframes tilt-shake {
-  0%, 100% { transform: rotate(0deg); }
-  25% { transform: rotate(-3deg); }
-  75% { transform: rotate(3deg); }
-}
-
-@keyframes glow-pulse {
-  0%, 100% { 
-    box-shadow: 0 0 20px hsl(var(--adventure-orange) / 0.5),
-                0 0 40px hsl(var(--adventure-teal) / 0.3);
-  }
-  50% { 
-    box-shadow: 0 0 30px hsl(var(--adventure-orange) / 0.8),
-                0 0 60px hsl(var(--adventure-teal) / 0.5),
-                0 0 80px hsl(var(--adventure-purple) / 0.3);
-  }
-}
-
-@keyframes slide-in-chaotic {
-  from {
-    transform: translateX(-100%) rotate(-10deg);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(0) rotate(0deg);
-    opacity: 1;
-  }
-}
-
-@keyframes spin-adventure {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-/* UTILITY CLASSES */
-.animate-float {
-  animation: float 3s ease-in-out infinite;
-}
-
-.animate-bounce-chaotic {
-  animation: bounce-chaotic 2s ease-in-out infinite;
-}
-
-.animate-tilt-shake {
-  animation: tilt-shake 0.5s ease-in-out infinite;
-}
-
-.animate-glow-pulse {
-  animation: glow-pulse 2s ease-in-out infinite;
-}
-
-.animate-slide-in-chaotic {
-  animation: slide-in-chaotic 0.6s ease-out;
-}
-
-.adventure-gradient {
-  background: linear-gradient(135deg, 
-    hsl(var(--adventure-orange)) 0%,
-    hsl(var(--adventure-teal)) 50%,
-    hsl(var(--adventure-purple)) 100%
-  );
-}
-
-.adventure-text-gradient {
-  background: linear-gradient(135deg, 
-    hsl(var(--adventure-orange)) 0%,
-    hsl(var(--adventure-yellow)) 50%,
-    hsl(var(--adventure-teal)) 100%
-  );
+.gradient-text {
+  background: linear-gradient(to right, #9333ea, #c026d3);
   -webkit-background-clip: text;
   background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-.chaotic-border {
-  border: 3px solid hsl(var(--adventure-orange));
-  border-radius: 20px;
-  box-shadow: 
-    4px 4px 0 hsl(var(--adventure-teal)),
-    8px 8px 0 hsl(var(--adventure-purple)),
-    0 0 30px hsl(var(--adventure-orange) / 0.3);
-}
-
-.adventure-shadow {
-  box-shadow: 
-    0 10px 30px hsl(var(--adventure-orange) / 0.3),
-    0 20px 60px hsl(var(--adventure-purple) / 0.2),
-    inset 0 1px 0 hsl(0 0% 100% / 0.1);
+  color: transparent;
 }

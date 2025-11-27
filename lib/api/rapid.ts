@@ -3,6 +3,11 @@ import { AirportCode } from "../types/flights";
 const RAPIDAPI_KEY = process.env.RAPIDAPI_KEY;
 const RAPIDAPI_HOST = process.env.RAPIDAPI_HOST;
 
+const MAJOR_HUBS = [
+    "LHR", "CDG", "FRA", "AMS", "DXB", "JFK", "LAX", "SIN", "HKG", "HND",
+    "NRT", "IST", "DOH", "SYD", "MEL", "BKK", "ICN", "KUL", "MUC", "ZRH"
+];
+
 interface AeroDataBoxFlight {
     departure: {
         airport?: {
@@ -34,39 +39,25 @@ interface AeroDataBoxResponse {
     arrivals?: AeroDataBoxFlight[];
 }
 
-export async function fetchFlights(origin: AirportCode, destination: AirportCode, tripType: string = "one-way", date?: string) {
-    // AeroDataBox doesn't have a direct "search flights between A and B" endpoint
-    // We'll fetch departures from origin and filter for flights to destination
-
-    // Validate environment variables
+async function fetchDepartures(airport: string, date?: string): Promise<AeroDataBoxFlight[]> {
     if (!RAPIDAPI_KEY || !RAPIDAPI_HOST) {
         throw new Error("Missing required environment variables: RAPIDAPI_KEY and RAPIDAPI_HOST must be defined");
     }
 
     const now = new Date();
     let offsetMinutes = 0;
-    let durationMinutes = 720; // 12 hours window (API maximum)
+    let durationMinutes = 720; // 12 hours window
 
-    // If a date is provided, calculate the time window for that date
     if (date) {
-        // Parse the date (YYYY-MM-DD) and set to noon UTC for that day
         const targetDate = new Date(date + 'T12:00:00Z');
         const targetTime = targetDate.getTime();
         const currentTime = now.getTime();
-
-        // Calculate offset in minutes from now to the target date
         offsetMinutes = Math.floor((targetTime - currentTime) / (1000 * 60));
-
-        // Search window: ±12 hours from noon (covers the full day)
-        // But we need to adjust to stay within API limits
-        // We'll search from 6 hours before to 6 hours after noon
-        offsetMinutes -= 360; // Start 6 hours before noon
-        durationMinutes = 720; // 12 hours total (6 hours before + 6 hours after)
+        offsetMinutes -= 360;
+        durationMinutes = 720;
     }
 
-    const url = `https://${RAPIDAPI_HOST}/flights/airports/iata/${origin}?offsetMinutes=${offsetMinutes}&durationMinutes=${durationMinutes}&withLeg=true&direction=Departure&withCancelled=false&withCodeshared=false&withCargo=false&withPrivate=false&withLocation=false`;
-
-    console.log(`[AeroDataBox API] Fetching flights from ${origin} to ${destination}, tripType: ${tripType}, offsetMinutes: ${offsetMinutes}, durationMinutes: ${durationMinutes}`);
+    const url = `https://${RAPIDAPI_HOST}/flights/airports/iata/${airport}?offsetMinutes=${offsetMinutes}&durationMinutes=${durationMinutes}&withLeg=true&direction=Departure&withCancelled=false&withCodeshared=false&withCargo=false&withPrivate=false&withLocation=false`;
 
     try {
         const response = await fetch(url, {
@@ -78,67 +69,125 @@ export async function fetchFlights(origin: AirportCode, destination: AirportCode
         });
 
         if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(`AeroDataBox API error: ${response.status} ${response.statusText} - ${errorText}`);
+            // If 404 or other error, just return empty to avoid breaking the whole flow
+            console.warn(`[AeroDataBox API] Failed to fetch departures for ${airport}: ${response.status}`);
+            return [];
         }
 
         const data: AeroDataBoxResponse = await response.json();
+        return data.departures || [];
+    } catch (error) {
+        console.error(`[AeroDataBox API] Error fetching departures for ${airport}:`, error);
+        return [];
+    }
+}
 
-        // Filter flights going to destination
-        const departures = data.departures || [];
-        const relevantFlights = departures.filter(flight =>
-            flight.arrival?.airport?.iata === destination
-        );
+export async function fetchFlights(origin: AirportCode, destination: AirportCode, tripType: string = "one-way", date?: string) {
+    console.log(`[Flight Search] ${origin} -> ${destination} (${tripType})`);
 
-        console.log(`[AeroDataBox API] Found ${departures.length} total departures, ${relevantFlights.length} flights to ${destination}`);
+    // 1. Fetch departures from Origin
+    const originDepartures = await fetchDepartures(origin, date);
 
-        // Transform to our expected format with mock pricing
-        const itineraries = relevantFlights.map(flight => {
-            const dTimeUTC = flight.departure.scheduledTime?.utc
-                ? new Date(flight.departure.scheduledTime.utc).getTime() / 1000
-                : Math.floor(Date.now() / 1000);
+    // 2. Find Direct Flights
+    const directFlights = originDepartures.filter(flight =>
+        flight.arrival?.airport?.iata === destination
+    );
 
-            const aTimeUTC = flight.arrival.scheduledTime?.utc
-                ? new Date(flight.arrival.scheduledTime.utc).getTime() / 1000
-                : dTimeUTC + 7200; // Default 2 hour flight
+    let itineraries: any[] = [];
 
-            // Generate realistic price based on airline and flight duration
-            const duration = aTimeUTC - dTimeUTC;
-            const basePrice = 150;
-            const durationFactor = (duration / 3600) * 30; // $30 per hour
-            const randomVariance = Math.random() * 200;
-            let price = Math.floor(basePrice + durationFactor + randomVariance);
+    // Helper to create itinerary from flight segments
+    const createItinerary = (segments: AeroDataBoxFlight[]) => {
+        const firstLeg = segments[0];
+        const lastLeg = segments[segments.length - 1];
 
-            // For round-trip, approximately double the price with some variance
-            if (tripType === "round-trip") {
-                price = Math.floor(price * 1.85 + Math.random() * 100);
+        const dTimeUTC = firstLeg.departure.scheduledTime?.utc
+            ? new Date(firstLeg.departure.scheduledTime.utc).getTime() / 1000
+            : Math.floor(Date.now() / 1000);
+
+        const aTimeUTC = lastLeg.arrival.scheduledTime?.utc
+            ? new Date(lastLeg.arrival.scheduledTime.utc).getTime() / 1000
+            : dTimeUTC + 7200 * segments.length;
+
+        const duration = aTimeUTC - dTimeUTC;
+
+        // Price calculation
+        let basePrice = 150 * segments.length; // More expensive for multi-leg
+        const durationFactor = (duration / 3600) * 30;
+        const randomVariance = Math.random() * 200;
+        let price = Math.floor(basePrice + durationFactor + randomVariance);
+
+        if (tripType === "round-trip") {
+            price = Math.floor(price * 1.85 + Math.random() * 100);
+        }
+
+        const route = segments.map(flight => ({
+            flyFrom: flight.departure.airport?.iata || "UNK",
+            flyTo: flight.arrival.airport?.iata || "UNK",
+            airline: flight.airline.name,
+            dTimeUTC: flight.departure.scheduledTime?.utc ? new Date(flight.departure.scheduledTime.utc).getTime() / 1000 : 0,
+            aTimeUTC: flight.arrival.scheduledTime?.utc ? new Date(flight.arrival.scheduledTime.utc).getTime() / 1000 : 0,
+        }));
+
+        // Booking link
+        const bookingParams = segments.map(s => `${s.airline.name}+${s.number}`).join("+");
+        const deep_link = `https://www.google.com/search?q=flight+${bookingParams}+${origin}+${destination}`;
+
+        return {
+            price,
+            deep_link,
+            route,
+            duration: duration, // Added metric
+            stops: segments.length - 1, // Added metric
+            airline: segments[0].airline.name, // Main airline
+        };
+    };
+
+    // Add direct flights
+    itineraries = [...itineraries, ...directFlights.map(f => createItinerary([f]))];
+
+    // 3. If no direct flights (or few), try Multi-Leg via Hubs
+    if (itineraries.length === 0) {
+        console.log(`[Flight Search] No direct flights found. Trying multi-leg routes...`);
+
+        // Identify potential hubs: Flights from Origin that go to a Major Hub
+        const hubCandidates = originDepartures.filter(flight =>
+            MAJOR_HUBS.includes(flight.arrival?.airport?.iata || "")
+        ).slice(0, 5); // Limit to top 5 to save API calls
+
+        console.log(`[Flight Search] Found ${hubCandidates.length} potential hubs: ${hubCandidates.map(f => f.arrival?.airport?.iata).join(", ")}`);
+
+        // Fetch departures from these hubs in parallel
+        const hubPromises = hubCandidates.map(async (leg1) => {
+            const hubIata = leg1.arrival?.airport?.iata;
+            if (!hubIata) return null;
+
+            const hubDepartures = await fetchDepartures(hubIata, date);
+
+            // Find flights from Hub -> Destination
+            const leg2Flights = hubDepartures.filter(flight =>
+                flight.arrival?.airport?.iata === destination
+            );
+
+            // Filter for valid connection time (Leg 2 departs > Leg 1 arrives + 1 hour)
+            const validConnections = leg2Flights.filter(leg2 => {
+                const arr1 = leg1.arrival.scheduledTime?.utc ? new Date(leg1.arrival.scheduledTime.utc).getTime() : 0;
+                const dep2 = leg2.departure.scheduledTime?.utc ? new Date(leg2.departure.scheduledTime.utc).getTime() : 0;
+                return dep2 > arr1 + 3600 * 1000; // At least 1 hour layover
+            });
+
+            if (validConnections.length > 0) {
+                // Return the best connection (just the first one for now)
+                return createItinerary([leg1, validConnections[0]]);
             }
-
-            // Generate booking link - for round-trip, add return flight parameters
-            const bookingParams = tripType === "round-trip"
-                ? `${flight.airline.name}+flight+${flight.number}+round+trip+${origin}+${destination}`
-                : `${flight.airline.name}+flight+${flight.number}`;
-            const deep_link = `https://www.google.com/search?q=${bookingParams}`;
-
-            return {
-                price: price,
-                deep_link: deep_link,
-                route: [
-                    {
-                        flyFrom: origin,
-                        flyTo: destination,
-                        airline: flight.airline.name,
-                        dTimeUTC: dTimeUTC,
-                        aTimeUTC: aTimeUTC,
-                    },
-                ],
-            };
+            return null;
         });
 
-        return { data: itineraries };
+        const multiLegResults = await Promise.all(hubPromises);
+        const validMultiLegs = multiLegResults.filter(r => r !== null);
 
-    } catch (error) {
-        console.error("Failed to fetch flights from AeroDataBox:", error);
-        throw error;
+        itineraries = [...itineraries, ...validMultiLegs];
     }
+
+    console.log(`[Flight Search] Returning ${itineraries.length} itineraries`);
+    return { data: itineraries };
 }

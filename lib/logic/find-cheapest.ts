@@ -4,6 +4,9 @@ interface ApiResponse {
     data: Array<{
         price: number;
         deep_link?: string;
+        duration?: number;
+        stops?: number;
+        airline?: string;
         route: Array<{
             flyFrom: string;
             flyTo: string;
@@ -38,6 +41,10 @@ export function findCheapestItinerary(apiResponse: ApiResponse): Itinerary | nul
             price: item.price,
             deep_link: item.deep_link,
             route,
+            duration: item.duration,
+            totalDuration: item.duration,
+            stops: item.stops,
+            airline: item.airline,
         };
 
         if (cheapest === null || itinerary.price < cheapest.price) {

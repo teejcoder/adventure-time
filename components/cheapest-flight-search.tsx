@@ -5,10 +5,10 @@ import { SearchResponse, Itinerary, TripType } from "../lib/types/flights";
 import { formatCurrency, formatTime } from "../lib/utils/format";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Plane, ArrowRight, AlertCircle, Loader2, MapPin, Compass, Sparkles, Calendar as CalendarIcon } from "lucide-react";
+import { Plane, ArrowRight, AlertCircle, Loader2, MapPin, Compass, Calendar as CalendarIcon } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format } from "date-fns";
@@ -24,7 +24,6 @@ function formatDuration(seconds: number): string {
     }
     return `${hours}h ${minutes}m`;
 }
-
 
 export function CheapestFlightSearch() {
     const [origin, setOrigin] = useState("");
@@ -109,328 +108,212 @@ export function CheapestFlightSearch() {
     };
 
     return (
-        <div className="w-full max-w-2xl mx-auto space-y-6">
-            {/* Main Search Card - Treasure Map Style */}
-            <Card className="chaotic-border bg-card/95 backdrop-blur-sm transform hover:scale-[1.02] transition-all duration-300 relative overflow-hidden">
-                {/* Decorative corner elements */}
-                <div className="absolute top-2 right-2 w-6 h-6 border-t-4 border-r-4 border-primary rounded-tr-lg"></div>
-                <div className="absolute bottom-2 left-2 w-6 h-6 border-b-4 border-l-4 border-secondary rounded-bl-lg"></div>
-
-                <CardHeader className="relative">
-                    <div className="absolute -top-1 -right-1">
-                        <Compass className="w-8 h-8 text-accent animate-spin-adventure opacity-40" style={{ animationDuration: '20s' }} />
-                    </div>
-                    <CardTitle className="text-3xl font-black text-center adventure-text-gradient transform -rotate-1">
-                        🗺️ Find Your Adventure
-                    </CardTitle>
-                    <CardDescription className="text-center text-base font-semibold">
-                        Discover the cheapest flights and start exploring! ✨
-                    </CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <form onSubmit={handleSearch} className="space-y-6">
-                        {/* Trip Type Selector */}
-                        <div className="space-y-2">
-                            <Label className="text-sm font-bold uppercase tracking-wider text-foreground flex items-center gap-2">
-                                <Plane className="w-4 h-4" />
-                                Trip Type
-                            </Label>
-                            <div className="grid grid-cols-2 gap-3">
-                                <Button
-                                    type="button"
-                                    onClick={() => setTripType("one-way")}
-                                    className={`font-bold py-6 transition-all duration-200 ${tripType === "one-way"
-                                        ? "bg-primary text-primary-foreground shadow-lg scale-105 border-4 border-primary"
-                                        : "bg-card text-muted-foreground border-4 border-border hover:border-primary/50 hover:scale-102"
-                                        }`}
-                                    variant={tripType === "one-way" ? "default" : "outline"}
-                                >
-                                    ✈️ One-Way
-                                </Button>
-                                <Button
-                                    type="button"
-                                    onClick={() => setTripType("round-trip")}
-                                    className={`font-bold py-6 transition-all duration-200 ${tripType === "round-trip"
-                                        ? "bg-secondary text-secondary-foreground shadow-lg scale-105 border-4 border-secondary"
-                                        : "bg-card text-muted-foreground border-4 border-border hover:border-secondary/50 hover:scale-102"
-                                        }`}
-                                    variant={tripType === "round-trip" ? "default" : "outline"}
-                                >
-                                    🔄 Round-Trip
-                                </Button>
-                            </div>
+        <div className="w-full max-w-4xl mx-auto space-y-8 p-4">
+            {/* Search Card */}
+            <Card className="gradient-card shadow-2xl overflow-hidden border-0 ring-1 ring-purple-100">
+                <CardContent className="p-10">
+                    <form onSubmit={handleSearch} className="space-y-10">
+                        {/* Trip Type */}
+                        <div className="flex justify-center gap-6">
+                            <Button
+                                type="button"
+                                onClick={() => setTripType("one-way")}
+                                variant={tripType === "one-way" ? "default" : "outline"}
+                                className={`rounded-full px-10 py-7 text-xl font-black transition-all border-2 ${tripType === "one-way"
+                                    ? "bg-purple-600 hover:bg-purple-700 text-white shadow-xl scale-105 border-transparent"
+                                    : "bg-white text-purple-900 border-purple-200 hover:bg-purple-50 hover:border-purple-300"
+                                    }`}
+                            >
+                                One-Way
+                            </Button>
+                            <Button
+                                type="button"
+                                onClick={() => setTripType("round-trip")}
+                                variant={tripType === "round-trip" ? "default" : "outline"}
+                                className={`rounded-full px-10 py-7 text-xl font-black transition-all border-2 ${tripType === "round-trip"
+                                    ? "bg-purple-600 hover:bg-purple-700 text-white shadow-xl scale-105 border-transparent"
+                                    : "bg-white text-purple-900 border-purple-200 hover:bg-purple-50 hover:border-purple-300"
+                                    }`}
+                            >
+                                Round-Trip
+                            </Button>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-6">
-                            {/* Origin Input */}
-                            <div className="space-y-2">
-                                <Label htmlFor="origin" className="text-sm font-bold uppercase tracking-wider text-primary flex items-center gap-2">
-                                    <MapPin className="w-4 h-4" />
-                                    From
-                                </Label>
+                        {/* Inputs */}
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                            {/* Origin */}
+                            <div className="space-y-3">
+                                <Label className="text-purple-900 font-black uppercase tracking-widest text-xs ml-1">From</Label>
                                 <div className="relative group">
+                                    <MapPin className="absolute left-5 top-1/2 -translate-y-1/2 text-purple-400 w-6 h-6 group-focus-within:text-purple-600 transition-colors" />
                                     <Input
-                                        id="origin"
-                                        placeholder="LAX"
                                         value={origin}
                                         onChange={(e) => setOrigin(e.target.value.toUpperCase())}
+                                        placeholder="LAX"
                                         maxLength={3}
-                                        className="font-mono text-2xl font-black uppercase text-center border-4 border-primary focus:border-secondary focus:ring-4 focus:ring-accent/30 bg-card transform group-hover:scale-105 transition-transform"
-                                        required
+                                        className="bg-white border-2 border-purple-100 text-purple-900 placeholder:text-purple-200 text-center text-3xl font-black h-20 rounded-3xl focus:ring-4 focus:ring-purple-100 focus:border-purple-400 transition-all pl-12 shadow-sm hover:border-purple-200"
                                     />
                                 </div>
                             </div>
 
-                            {/* Destination Input */}
-                            <div className="space-y-2">
-                                <Label htmlFor="destination" className="text-sm font-bold uppercase tracking-wider text-secondary flex items-center gap-2">
-                                    <MapPin className="w-4 h-4" />
-                                    To
-                                </Label>
+                            {/* Destination */}
+                            <div className="space-y-3">
+                                <Label className="text-purple-900 font-black uppercase tracking-widest text-xs ml-1">To</Label>
                                 <div className="relative group">
+                                    <MapPin className="absolute left-5 top-1/2 -translate-y-1/2 text-purple-400 w-6 h-6 group-focus-within:text-purple-600 transition-colors" />
                                     <Input
-                                        id="destination"
-                                        placeholder="LHR"
                                         value={destination}
                                         onChange={(e) => setDestination(e.target.value.toUpperCase())}
+                                        placeholder="JFK"
                                         maxLength={3}
-                                        className="font-mono text-2xl font-black uppercase text-center border-4 border-secondary focus:border-primary focus:ring-4 focus:ring-accent/30 bg-card transform group-hover:scale-105 transition-transform"
-                                        required
+                                        className="bg-white border-2 border-purple-100 text-purple-900 placeholder:text-purple-200 text-center text-3xl font-black h-20 rounded-3xl focus:ring-4 focus:ring-purple-100 focus:border-purple-400 transition-all pl-12 shadow-sm hover:border-purple-200"
                                     />
                                 </div>
                             </div>
+
+                            {/* Date */}
+                            <div className="space-y-3">
+                                <Label className="text-purple-900 font-black uppercase tracking-widest text-xs ml-1">Date</Label>
+                                <Popover>
+                                    <PopoverTrigger asChild>
+                                        <Button
+                                            variant="outline"
+                                            className={cn(
+                                                "w-full h-20 bg-white border-2 border-purple-100 text-purple-900 hover:bg-purple-50 hover:border-purple-200 rounded-3xl text-xl font-bold justify-start px-6 shadow-sm group",
+                                                !date && "text-purple-300"
+                                            )}
+                                        >
+                                            <CalendarIcon className="mr-4 h-6 w-6 text-purple-400 group-hover:text-purple-600 transition-colors" />
+                                            {date ? format(date, "MMM d, yyyy") : "Anytime"}
+                                        </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-auto p-0 bg-white border-2 border-purple-100 shadow-xl rounded-2xl">
+                                        <Calendar
+                                            mode="single"
+                                            selected={date}
+                                            onSelect={setDate}
+                                            initialFocus
+                                            className="p-4"
+                                        />
+                                    </PopoverContent>
+                                </Popover>
+                            </div>
                         </div>
 
-                        {/* Date Picker */}
-                        <div className="space-y-2">
-                            <Label className="text-sm font-bold uppercase tracking-wider text-foreground flex items-center gap-2">
-                                <CalendarIcon className="w-4 h-4" />
-                                Travel Date (Optional)
-                            </Label>
-                            <Popover>
-                                <PopoverTrigger asChild>
-                                    <Button
-                                        variant="outline"
-                                        className={cn(
-                                            "w-full justify-start text-left font-semibold border-4 border-accent hover:border-primary focus:ring-4 focus:ring-accent/30 py-6 transition-all",
-                                            !date && "text-muted-foreground"
-                                        )}
-                                    >
-                                        <CalendarIcon className="mr-2 h-5 w-5" />
-                                        {date ? format(date, "PPP") : <span>Pick a date or search anytime</span>}
-                                    </Button>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-auto p-0 border-4 border-primary" align="start">
-                                    <Calendar
-                                        mode="single"
-                                        selected={date}
-                                        onSelect={setDate}
-                                        initialFocus
-                                        disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
-                                    />
-                                    {date && (
-                                        <div className="p-3 border-t-2 border-border">
-                                            <Button
-                                                variant="ghost"
-                                                className="w-full font-bold"
-                                                onClick={() => setDate(undefined)}
-                                            >
-                                                Clear Date
-                                            </Button>
-                                        </div>
-                                    )}
-                                </PopoverContent>
-                            </Popover>
-                        </div>
-
-                        {/* Search Button - Glowing and Chaotic */}
+                        {/* Search Button */}
                         <Button
                             type="submit"
-                            className="w-full adventure-gradient text-white font-black text-lg py-6 transform hover:scale-105 active:scale-95 transition-all duration-200 shadow-2xl hover:shadow-primary/50 animate-glow-pulse relative overflow-hidden group"
                             disabled={loading}
+                            className="w-full h-24 bg-purple-900 hover:bg-black text-white text-3xl font-black rounded-3xl shadow-2xl hover:shadow-purple-900/25 transition-all transform hover:scale-[1.01] active:scale-[0.99]"
                         >
-                            <span className="relative z-10 flex items-center justify-center gap-3">
-                                {loading ? (
-                                    <>
-                                        <Loader2 className="h-6 w-6 animate-spin" />
-                                        <span className="animate-pulse">Searching the Skies...</span>
-                                    </>
-                                ) : (
-                                    <>
-                                        <Plane className="h-6 w-6 group-hover:translate-x-1 transition-transform" />
-                                        FIND MY ADVENTURE!
-                                        <Sparkles className="h-6 w-6 group-hover:rotate-12 transition-transform" />
-                                    </>
-                                )}
-                            </span>
+                            {loading ? (
+                                <div className="flex items-center gap-4">
+                                    <Loader2 className="w-10 h-10 animate-spin text-purple-400" />
+                                    <span>Searching...</span>
+                                </div>
+                            ) : (
+                                <div className="flex items-center gap-4">
+                                    <Plane className="w-10 h-10" />
+                                    <span>FIND FLIGHTS</span>
+                                </div>
+                            )}
                         </Button>
                     </form>
                 </CardContent>
             </Card>
 
-            {/* Error Alert - Chaotic Style */}
+            {/* Error */}
             {error && (
-                <Alert variant="destructive" className="animate-in fade-in slide-in-from-top-2 border-4 border-destructive transform -rotate-1">
-                    <AlertCircle className="h-5 w-5 animate-tilt-shake" />
-                    <AlertTitle className="font-black text-lg">Oops! Adventure Delayed! 🚨</AlertTitle>
-                    <AlertDescription className="font-semibold">{error}</AlertDescription>
+                <Alert variant="destructive" className="bg-red-50 border-2 border-red-100 text-red-900 rounded-2xl shadow-lg">
+                    <AlertCircle className="h-6 w-6 text-red-600" />
+                    <AlertTitle className="font-black text-lg">Error</AlertTitle>
+                    <AlertDescription className="font-medium text-lg">{error}</AlertDescription>
                 </Alert>
             )}
 
-            {/* Results Card - Adventure Log Style */}
+            {/* Results */}
             {result && (
-                <Card className="overflow-hidden adventure-shadow bg-card animate-in fade-in slide-in-from-bottom-4 transform hover:scale-[1.01] transition-all">
-                    {/* Price Header - Big and Bold */}
-                    <div className="adventure-gradient p-6 text-white relative overflow-hidden">
-                        <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
-                        <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full translate-y-1/2 -translate-x-1/2"></div>
-                        <div className="relative z-10 flex justify-between items-center">
+                <Card className="gradient-card shadow-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-8 duration-700 border-0 ring-1 ring-purple-100">
+                    {/* Header */}
+                    <div className="p-10 border-b border-purple-100 bg-white/50">
+                        <div className="flex flex-col md:flex-row justify-between items-center gap-8">
                             <div>
-                                <div className="flex items-center gap-2 mb-2">
-                                    <span className="font-bold text-white/90 text-sm uppercase tracking-wider">🎉 Best Price Found!</span>
-                                    {result.tripType && (
-                                        <span className="px-3 py-1 bg-white/20 rounded-full text-xs font-black uppercase">
-                                            {result.tripType === "round-trip" ? "🔄 Round-Trip" : "✈️ One-Way"}
-                                        </span>
-                                    )}
+                                <div className="text-sm font-black text-purple-600 uppercase tracking-widest mb-3">Best Price Found</div>
+                                <div className="text-7xl font-black text-purple-900 tracking-tighter">
+                                    {formatCurrency(result.price)}
                                 </div>
-                                <div className="text-5xl font-black mt-1 drop-shadow-lg">{formatCurrency(result.price)}</div>
+                                <div className="flex items-center gap-4 mt-4 text-purple-900/60 font-bold text-lg">
+                                    <span className="bg-purple-100 px-4 py-1.5 rounded-full text-sm font-black uppercase text-purple-700">{result.airline}</span>
+                                    <span>•</span>
+                                    <span>{result.stops === 0 ? "Direct" : `${result.stops} Stop${result.stops! > 1 ? 's' : ''}`}</span>
+                                    <span>•</span>
+                                    <span>{formatDuration(result.totalDuration || result.duration || 0)}</span>
+                                </div>
                             </div>
-                            <Sparkles className="w-16 h-16 animate-float opacity-80" />
+                            {result.deep_link && (
+                                <Button asChild className="h-20 px-10 bg-purple-600 hover:bg-purple-700 text-white font-black text-2xl rounded-2xl shadow-xl transition-all hover:scale-105 hover:rotate-1">
+                                    <a href={result.deep_link} target="_blank" rel="noopener noreferrer">
+                                        Book Now <ArrowRight className="ml-3 w-8 h-8" />
+                                    </a>
+                                </Button>
+                            )}
                         </div>
                     </div>
 
-                    <CardContent className="p-0">
-                        {/* Total Journey Duration */}
-                        {result.totalDuration && (
-                            <div className="p-4 bg-accent/10 border-b-4 border-border/50">
-                                <div className="flex items-center justify-center gap-2 text-sm font-bold text-muted-foreground">
-                                    <span className="text-lg">⏱️</span>
-                                    <span>Total Journey Time:</span>
-                                    <span className="text-foreground text-lg">{formatDuration(result.totalDuration)}</span>
-                                </div>
-                            </div>
-                        )}
+                    {/* Segments */}
+                    <div className="p-10 space-y-10">
+                        {result.route.map((segment, index) => (
+                            <div key={index} className="relative">
+                                {/* Connector Line */}
+                                {index < result.route.length - 1 && (
+                                    <div className="absolute left-[2.75rem] top-20 bottom-0 w-1 bg-purple-100 h-32"></div>
+                                )}
 
-                        {/* Journey Timeline */}
-                        <div className="p-6 space-y-4">
-                            {result.route.map((segment, index) => {
-                                const segmentDuration = segment.duration || (segment.aTimeUTC - segment.dTimeUTC);
-                                const layover = result.layovers?.[index];
+                                <div className="flex gap-8 items-start">
+                                    {/* Icon */}
+                                    <div className="w-20 h-20 rounded-3xl bg-white flex items-center justify-center border-4 border-purple-50 shadow-lg shrink-0 z-10">
+                                        <Plane className="w-10 h-10 text-purple-600" />
+                                    </div>
 
-                                return (
-                                    <div key={index}>
-                                        {/* Flight Segment */}
-                                        <div
-                                            className="relative group p-6 bg-gradient-to-br from-card to-accent/5 rounded-xl border-4 border-border hover:border-primary/50 transition-all duration-300 hover:shadow-xl"
-                                            style={{
-                                                transform: index % 2 === 0 ? 'rotate(0.5deg)' : 'rotate(-0.5deg)',
-                                            }}
-                                        >
-                                            {/* Flight number badge */}
-                                            <div className="absolute -top-3 -right-3 z-10">
-                                                <span className="px-4 py-2 bg-primary text-primary-foreground rounded-full text-xs font-black uppercase shadow-lg transform rotate-12 border-2 border-background">
-                                                    ✈️ Flight {index + 1}
-                                                </span>
+                                    {/* Details */}
+                                    <div className="flex-1 space-y-6">
+                                        <div className="flex justify-between items-start">
+                                            <div>
+                                                <h3 className="text-4xl font-black text-purple-900 tracking-tight">{segment.flyFrom} → {segment.flyTo}</h3>
+                                                <p className="text-purple-500 font-bold text-xl mt-1">{segment.airline}</p>
                                             </div>
-
-                                            {/* Airline and Flight Number */}
-                                            <div className="flex items-center justify-between mb-4">
-                                                <div className="text-base font-black text-accent uppercase tracking-wide">
-                                                    {segment.airline}
-                                                </div>
-                                                {segment.flightNumber && (
-                                                    <div className="text-sm font-bold text-muted-foreground">
-                                                        {segment.flightNumber}
-                                                    </div>
-                                                )}
-                                            </div>
-
-                                            {/* Route Display */}
-                                            <div className="flex items-center justify-between gap-4">
-                                                {/* Departure */}
-                                                <div className="text-center flex-1">
-                                                    <div className="text-4xl font-black text-primary mb-1">{segment.flyFrom}</div>
-                                                    <div className="text-sm font-semibold text-muted-foreground mb-1">
-                                                        {formatTime(segment.dTimeUTC)}
-                                                    </div>
-                                                    <div className="text-xs font-bold text-accent uppercase">Departure</div>
-                                                </div>
-
-                                                {/* Flight Path with Duration */}
-                                                <div className="flex-1 flex flex-col items-center px-4">
-                                                    <div className="text-xs font-bold text-muted-foreground mb-2">
-                                                        {formatDuration(segmentDuration)}
-                                                    </div>
-                                                    <div className="w-full h-1 bg-gradient-to-r from-primary via-secondary to-accent rounded-full relative">
-                                                        <Plane className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-6 w-6 text-foreground rotate-90 group-hover:translate-x-2 transition-transform" />
-                                                    </div>
-                                                </div>
-
-                                                {/* Arrival */}
-                                                <div className="text-center flex-1">
-                                                    <div className="text-4xl font-black text-secondary mb-1">{segment.flyTo}</div>
-                                                    <div className="text-sm font-semibold text-muted-foreground mb-1">
-                                                        {formatTime(segment.aTimeUTC)}
-                                                    </div>
-                                                    <div className="text-xs font-bold text-accent uppercase">Arrival</div>
-                                                </div>
+                                            <div className="text-right">
+                                                <div className="text-purple-900 font-mono text-2xl font-bold bg-purple-50 px-4 py-2 rounded-xl">{formatDuration(segment.duration || (segment.aTimeUTC - segment.dTimeUTC))}</div>
                                             </div>
                                         </div>
 
-                                        {/* Layover/Transit Information */}
-                                        {layover && (
-                                            <div className="flex flex-col items-center py-4">
-                                                {/* Connecting Line */}
-                                                <div className="w-1 h-8 bg-gradient-to-b from-border to-muted-foreground/30 rounded-full"></div>
-
-                                                {/* Layover Card */}
-                                                <div className="w-full max-w-md p-4 bg-muted/50 rounded-lg border-2 border-dashed border-muted-foreground/30 my-2">
-                                                    <div className="flex items-center justify-center gap-3">
-                                                        <div className="text-2xl">⏳</div>
-                                                        <div className="text-center">
-                                                            <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">
-                                                                Layover at {layover.airport}
-                                                            </div>
-                                                            <div className="text-lg font-black text-foreground">
-                                                                Wait Time: {formatDuration(layover.duration)}
-                                                            </div>
-                                                            <div className="text-xs text-muted-foreground mt-1">
-                                                                {formatTime(layover.arrivalTime)} → {formatTime(layover.departureTime)}
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-
-                                                {/* Connecting Line */}
-                                                <div className="w-1 h-8 bg-gradient-to-b from-muted-foreground/30 to-border rounded-full"></div>
+                                        <div className="grid grid-cols-2 gap-6 bg-white rounded-3xl p-6 border-2 border-purple-50 shadow-sm">
+                                            <div>
+                                                <div className="text-xs text-purple-400 uppercase font-black tracking-widest mb-1">Departure</div>
+                                                <div className="text-2xl text-purple-900 font-black">{formatTime(segment.dTimeUTC)}</div>
                                             </div>
-                                        )}
+                                            <div className="text-right">
+                                                <div className="text-xs text-purple-400 uppercase font-black tracking-widest mb-1">Arrival</div>
+                                                <div className="text-2xl text-purple-900 font-black">{formatTime(segment.aTimeUTC)}</div>
+                                            </div>
+                                        </div>
                                     </div>
-                                );
-                            })}
-                        </div>
+                                </div>
 
-                        {/* Book Now Button */}
-                        {result.deep_link && (
-                            <div className="p-6 bg-gradient-to-br from-accent/5 to-primary/5 border-t-4 border-border/50">
-                                <Button
-                                    asChild
-                                    className="w-full adventure-gradient text-white font-black text-xl py-6 transform hover:scale-105 active:scale-95 transition-all shadow-xl"
-                                >
-                                    <a
-                                        href={result.deep_link}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="flex items-center justify-center gap-3"
-                                    >
-                                        🎫 BOOK THIS ADVENTURE NOW!
-                                        <ArrowRight className="h-6 w-6 animate-bounce-chaotic" />
-                                    </a>
-                                </Button>
+                                {/* Layover */}
+                                {result.layovers?.[index] && (
+                                    <div className="ml-[2.75rem] pl-16 py-8 relative">
+                                        <div className="bg-purple-50 rounded-2xl p-5 border border-purple-100 inline-block shadow-inner">
+                                            <div className="text-base text-purple-700 font-bold flex items-center gap-3">
+                                                <Compass className="w-5 h-5" />
+                                                Layover in {result.layovers[index].airport} • {formatDuration(result.layovers[index].duration)}
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
-                        )}
-                    </CardContent>
+                        ))}
+                    </div>
                 </Card>
             )}
         </div>

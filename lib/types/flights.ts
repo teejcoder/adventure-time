@@ -26,6 +26,9 @@ export interface Itinerary {
   layovers?: Layover[];
   tripType?: TripType;
   totalDuration?: number; // Total journey duration in seconds
+  duration?: number; // Total journey duration in seconds (alias)
+  stops?: number;
+  airline?: string;
 }
 
 export interface SearchRequest {

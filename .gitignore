@@ -39,3 +39,15 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# macOS metadata files
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Apple's resource fork "._" files
+._*
+
+# Thumbnails or Finder cache
+Icon?
+._.Trashes
