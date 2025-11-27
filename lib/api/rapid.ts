@@ -8,6 +8,24 @@ const MAJOR_HUBS = [
     "NRT", "IST", "DOH", "SYD", "MEL", "BKK", "ICN", "KUL", "MUC", "ZRH"
 ];
 
+// Map city codes to their airport codes for multi-airport cities
+const CITY_AIRPORTS: Record<string, string[]> = {
+    "LDN": ["LHR", "LGW", "STN", "LTN", "LCY"], // London
+    "NYC": ["JFK", "LGA", "EWR"], // New York
+    "TYO": ["NRT", "HND"], // Tokyo
+    "PAR": ["CDG", "ORY"], // Paris
+    "LON": ["LHR", "LGW", "STN", "LTN", "LCY"], // London (alternative)
+    "CHI": ["ORD", "MDW"], // Chicago
+    "MIL": ["MXP", "LIN", "BGY"], // Milan
+    "BUE": ["EZE", "AEP"], // Buenos Aires
+    "SAO": ["GRU", "CGH", "VCP"], // São Paulo
+    "BKK": ["BKK", "DMK"], // Bangkok
+    "JKT": ["CGK", "HLP"], // Jakarta
+    "OSA": ["KIX", "ITM"], // Osaka
+    "STO": ["ARN", "BMA", "NYO"], // Stockholm
+    "MOW": ["SVO", "DME", "VKO"], // Moscow
+};
+
 interface AeroDataBoxFlight {
     departure: {
         airport?: {
@@ -82,6 +100,25 @@ async function fetchDepartures(airport: string, date?: string): Promise<AeroData
     }
 }
 
+/**
+ * Check if an airport matches the destination, considering city codes.
+ * For example, LHR matches both "LHR" and "LDN" (London city code).
+ */
+function airportMatchesDestination(airportCode: string | undefined, destination: string): boolean {
+    if (!airportCode) return false;
+
+    // Direct match
+    if (airportCode === destination) return true;
+
+    // Check if destination is a city code and airport is one of its airports
+    const cityAirports = CITY_AIRPORTS[destination];
+    if (cityAirports && cityAirports.includes(airportCode)) {
+        return true;
+    }
+
+    return false;
+}
+
 export async function fetchFlights(origin: AirportCode, destination: AirportCode, tripType: string = "one-way", date?: string) {
     console.log(`[Flight Search] ${origin} -> ${destination} (${tripType})`);
 
@@ -90,7 +127,7 @@ export async function fetchFlights(origin: AirportCode, destination: AirportCode
 
     // 2. Find Direct Flights
     const directFlights = originDepartures.filter(flight =>
-        flight.arrival?.airport?.iata === destination
+        airportMatchesDestination(flight.arrival?.airport?.iata, destination)
     );
 
     let itineraries: any[] = [];
@@ -128,6 +165,30 @@ export async function fetchFlights(origin: AirportCode, destination: AirportCode
             aTimeUTC: flight.arrival.scheduledTime?.utc ? new Date(flight.arrival.scheduledTime.utc).getTime() / 1000 : 0,
         }));
 
+        // Calculate layovers between segments
+        const layovers = [];
+        for (let i = 0; i < segments.length - 1; i++) {
+            const currentSegment = segments[i];
+            const nextSegment = segments[i + 1];
+
+            const arrivalTime = currentSegment.arrival.scheduledTime?.utc
+                ? new Date(currentSegment.arrival.scheduledTime.utc).getTime() / 1000
+                : 0;
+
+            const departureTime = nextSegment.departure.scheduledTime?.utc
+                ? new Date(nextSegment.departure.scheduledTime.utc).getTime() / 1000
+                : 0;
+
+            const layoverDuration = departureTime - arrivalTime;
+
+            layovers.push({
+                airport: currentSegment.arrival.airport?.iata || "UNK",
+                arrivalTime,
+                departureTime,
+                duration: layoverDuration,
+            });
+        }
+
         // Booking link
         const bookingParams = segments.map(s => `${s.airline.name}+${s.number}`).join("+");
         const deep_link = `https://www.google.com/search?q=flight+${bookingParams}+${origin}+${destination}`;
@@ -136,9 +197,11 @@ export async function fetchFlights(origin: AirportCode, destination: AirportCode
             price,
             deep_link,
             route,
-            duration: duration, // Added metric
-            stops: segments.length - 1, // Added metric
-            airline: segments[0].airline.name, // Main airline
+            layovers: layovers.length > 0 ? layovers : undefined,
+            duration: duration,
+            totalDuration: duration,
+            stops: segments.length - 1,
+            airline: segments[0].airline.name,
         };
     };
 
@@ -162,11 +225,13 @@ export async function fetchFlights(origin: AirportCode, destination: AirportCode
             if (!hubIata) return null;
 
             const hubDepartures = await fetchDepartures(hubIata, date);
+            console.log(`[Flight Search] Hub ${hubIata}: Found ${hubDepartures.length} departures`);
 
             // Find flights from Hub -> Destination
             const leg2Flights = hubDepartures.filter(flight =>
-                flight.arrival?.airport?.iata === destination
+                airportMatchesDestination(flight.arrival?.airport?.iata, destination)
             );
+            console.log(`[Flight Search] Hub ${hubIata}: Found ${leg2Flights.length} flights to ${destination}`);
 
             // Filter for valid connection time (Leg 2 departs > Leg 1 arrives + 1 hour)
             const validConnections = leg2Flights.filter(leg2 => {
@@ -174,6 +239,7 @@ export async function fetchFlights(origin: AirportCode, destination: AirportCode
                 const dep2 = leg2.departure.scheduledTime?.utc ? new Date(leg2.departure.scheduledTime.utc).getTime() : 0;
                 return dep2 > arr1 + 3600 * 1000; // At least 1 hour layover
             });
+            console.log(`[Flight Search] Hub ${hubIata}: Found ${validConnections.length} valid connections`);
 
             if (validConnections.length > 0) {
                 // Return the best connection (just the first one for now)
