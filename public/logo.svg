@@ -1,7 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-plane">
-  <circle cx="50" cy="50" r="45" fill="#3b82f6" stroke="none" opacity="0.2" />
-  <path d="M20 50 L80 50" stroke="#3b82f6" stroke-width="4" />
-  <path d="M50 20 L50 80" stroke="#3b82f6" stroke-width="4" />
-  <path d="M22 50 L40 30 L60 30 L80 50 L60 70 L40 70 Z" fill="#3b82f6" stroke="white" stroke-width="2" />
-  <circle cx="50" cy="50" r="5" fill="white" />
-</svg>

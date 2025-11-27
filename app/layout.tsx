@@ -16,7 +16,7 @@ export const metadata: Metadata = {
     siteName: "Adventure Time",
     images: [
       {
-        url: "/logo.png",
+        url: "/public/logo.png",
         width: 800,
         height: 600,
         alt: "Adventure Time Logo",
@@ -29,12 +29,12 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Adventure Time | Cheapest Flight Finder",
     description: "Find the absolute cheapest flights between any two airports instantly.",
-    images: ["/logo.png"],
+    images: ["/public/logo.png"],
   },
   icons: {
-    icon: "/logo.svg",
-    shortcut: "/favicon.ico",
-    apple: "/logo.svg",
+    icon: "/public/logo.svg",
+    shortcut: "favicon.ico",
+    apple: "/public/logo.svg",
   },
 };
 
