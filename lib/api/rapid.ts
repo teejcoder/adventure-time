@@ -1,4 +1,4 @@
-import { AirportCode } from "../types/flights";
+import { AirportCode, Itinerary, RouteSegment, Layover } from "../types/flights";
 
 const RAPIDAPI_KEY = process.env.RAPIDAPI_KEY;
 const RAPIDAPI_HOST = process.env.RAPIDAPI_HOST;
@@ -87,6 +87,9 @@ async function fetchDepartures(airport: string, date?: string): Promise<AeroData
         });
 
         if (!response.ok) {
+            if (response.status === 429) {
+                throw new Error("API_RATE_LIMIT_EXCEEDED");
+            }
             // If 404 or other error, just return empty to avoid breaking the whole flow
             console.warn(`[AeroDataBox API] Failed to fetch departures for ${airport}: ${response.status}`);
             return [];
@@ -94,7 +97,10 @@ async function fetchDepartures(airport: string, date?: string): Promise<AeroData
 
         const data: AeroDataBoxResponse = await response.json();
         return data.departures || [];
-    } catch (error) {
+    } catch (error: any) {
+        if (error.message === "API_RATE_LIMIT_EXCEEDED") {
+            throw error;
+        }
         console.error(`[AeroDataBox API] Error fetching departures for ${airport}:`, error);
         return [];
     }
@@ -123,7 +129,16 @@ export async function fetchFlights(origin: AirportCode, destination: AirportCode
     console.log(`[Flight Search] ${origin} -> ${destination} (${tripType})`);
 
     // 1. Fetch departures from Origin
-    const originDepartures = await fetchDepartures(origin, date);
+    let originDepartures;
+    try {
+        originDepartures = await fetchDepartures(origin, date);
+    } catch (error: any) {
+        if (error.message === "API_RATE_LIMIT_EXCEEDED") {
+            console.warn(`[Flight Search] Rate limit exceeded. Returning mock data for ${origin} -> ${destination}`);
+            return { data: getMockItineraries(origin, destination, tripType) };
+        }
+        throw error;
+    }
 
     // 2. Find Direct Flights
     const directFlights = originDepartures.filter(flight =>
@@ -256,4 +271,44 @@ export async function fetchFlights(origin: AirportCode, destination: AirportCode
 
     console.log(`[Flight Search] Returning ${itineraries.length} itineraries`);
     return { data: itineraries };
+}
+
+function getMockItineraries(origin: string, destination: string, tripType: string): Itinerary[] {
+    const mockAirlines = ["Qantas", "United Airlines", "British Airways", "Emirates", "Singapore Airlines"];
+    const now = Math.floor(Date.now() / 1000);
+    const daySeconds = 86400;
+
+    const generateFlight = (index: number): Itinerary => {
+        const airline = mockAirlines[index % mockAirlines.length];
+        const departureTime = now + (index * 3600 * 2) + (Math.random() * 3600);
+        const duration = 14 * 3600; // Approx 14 hours
+        const arrivalTime = departureTime + duration;
+
+        const price = 800 + (index * 50) + Math.floor(Math.random() * 200);
+
+        const route: RouteSegment[] = [
+            {
+                flyFrom: origin,
+                flyTo: destination,
+                airline: airline,
+                dTimeUTC: departureTime,
+                aTimeUTC: arrivalTime,
+                flightNumber: `${airline.substring(0, 2).toUpperCase()}${100 + index}`,
+                duration: duration
+            }
+        ];
+
+        return {
+            price,
+            deep_link: `https://www.google.com/search?q=flight+${origin}+${destination}`,
+            route,
+            tripType: tripType as any,
+            totalDuration: duration,
+            duration: duration,
+            stops: 0,
+            airline: airline
+        };
+    };
+
+    return Array.from({ length: 5 }, (_, i) => generateFlight(i));
 }

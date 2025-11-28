@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import { Analytics } from '@vercel/analytics/next';
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -12,7 +13,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Adventure Time | Cheapest Flight Finder",
     description: "Find the absolute cheapest flights between any two airports instantly.",
-    url: "https://adventure-time.demo",
+    url: "https://adventure-time-flights.vercel.app",
     siteName: "Adventure Time",
     images: [
       {
@@ -45,7 +46,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={inter.className}>{children}</body>
+      <body className={inter.className}>
+        {children}
+        <Analytics />
+      </body>
     </html>
   );
 }

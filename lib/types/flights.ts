@@ -41,4 +41,4 @@ export interface SearchRequest {
 
 export type SearchResponse =
   | { status: "ok"; itinerary: Itinerary }
-  | { status: "error"; code: "INVALID_INPUT" | "NO_RESULTS"; message: string };
+  | { status: "error"; code: "INVALID_INPUT" | "NO_RESULTS" | "RATE_LIMIT" | "INTERNAL_ERROR"; message: string };

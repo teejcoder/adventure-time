@@ -51,8 +51,18 @@ export async function POST(request: Request) {
         };
         return NextResponse.json(response, { status: 200 });
 
-    } catch (error) {
+    } catch (error: any) {
         console.error("Search API error:", error);
+
+        if (error.message === "API_RATE_LIMIT_EXCEEDED") {
+            const response: SearchResponse = {
+                status: "error",
+                code: "RATE_LIMIT",
+                message: "Flight search service is currently busy. Please try again later.",
+            };
+            return NextResponse.json(response, { status: 429 });
+        }
+
         return NextResponse.json(
             { status: "error", code: "INTERNAL_ERROR", message: "An unexpected error occurred." },
             { status: 500 }
